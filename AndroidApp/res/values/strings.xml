@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Group Locator</string>
+    <string name="request">Request!</string>
+    <string name="hello">Hello World!</string>
+    <string name="upload">Upload Photo</string>
+    <string name="post">Wall Post!</string>
+    <string name="delete">Delete Post</string>
+    <string name="local_service_started">214214</string>
+    <string name="local_service_stopped">4124124412</string>
+    <string name="local_service_label">21414124214123</string>
+</resources>

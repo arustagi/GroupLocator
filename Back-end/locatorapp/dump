@@ -1,0 +1,247 @@
+
+def info(request):
+    res = {}
+    res["id"] = request.session["member_id"]
+    return HttpResponse(json.dumps(res)) 
+
+
+def session_check(request):
+    if 'member_id' in request.session:
+        return True
+    else:
+        return False
+
+def settings(request):
+    try:
+        if (session_check(request)):
+            from locatorapp.models import Person
+            p = Person.objects.get(pk=request.session["member_id"])
+            res = {}
+            res["loc_frequency"] = p.loc_frequency
+            res["loc_range"] = p.loc_range
+            return HttpResponse(json.dumps(res))
+        else:
+            return HttpResponse(Error.msg_by_code(Error.InvalidSession))
+    except Exception, e:
+        import sys
+        return HttpResponse(Error.format_json(sys.exc_value, sys.exc_type, 'sys'))
+    
+
+def create_group(request):
+    try:
+        if (session_check(request)):
+            g = request.GET
+            g_name = g.get("g_name", None)
+            g_map = g.get("g_map", '')
+            g_add = g.get("g_add", None)
+            
+            if ((not g_name)):
+                return HttpResponse(Error.msg_by_code(Error.InvalidRequestTokens))
+            import hashlib
+            from locatorapp.models import Group,Person
+            member_id = request.session("member_id")
+            g_channel_name = hashlib.sha1(member_id).digest() + g_name + str(datetime.datetime.now)
+            g = Group(name=g_name, channel_name=g_channel_name, map_data=g_map, creator=Person.objects.get(pk=member_id))
+            g.save()
+            
+            create_membership(g, member_id, member_id, 'subscribing my group', 'A')
+            res = {}
+            res["group_id"] = g
+            return HttpResponse(json.dumps(res))
+        else:
+            return HttpResponse(Error.msg_by_code(Error.InvalidSession))
+    except Exception, e:
+        import sys
+        return HttpResponse(Error.format_json(sys.exc_value, sys.exc_type, 'sys'))
+
+
+def create_membership(g_id, m_to_id, m_from_id, msg, status='I'):
+    try:
+        from locatorapp.models import Membership
+        group = Group.objects.get(pk=g_id)
+        member = Person.objects.get(pk=m_to_id)
+        m = Membership(group=group, member=member, invited_by=m_from_id, message=msg, joined_time=None, status=status)
+        m.save()
+        return m
+    except:
+        return 0
+
+
+def add_subscribers_to_group(request):
+    try:
+        if (session_check(request)):
+            g = request.GET
+            g_id = g.get("g_id", None)
+            g_add = g.get("g_add", None)
+            
+            g_msg = g.get("g_msg", '')
+            if ((not g_id) or (not g_add)):
+                return HttpResponse(Error.msg_by_code(Error.InvalidRequestTokens))
+            from locatorapp.models import Group
+            g = None
+            if Group.objects.filter(pk=g_id).exists():
+                g = Group.objects.get(pk=g_id)
+                members = g_add.split('*')
+                #check if all friends are valid
+                for m_id in members:
+                    f_profile = json.loads(Facebook.get_profile(request.session['fb_access_token'], m_id))
+                    if not(id in f_profile):
+                        return HttpResponse(Error.msg_by_code(Error.InvalidFriendsList))
+                #creating memberships
+                for m_id in members:
+                    f_profile = json.loads(Facebook.get_profile(request.session['fb_access_token'], m_id))
+                    p_id = create_user(f_user_id, f_profile["first_name"] + ' ' + f_profile["last_name"])
+                    create_membership(g_id, p_id, request.session('member_d'), g_msg, 'I')
+                     
+                res = {}
+                res["success"] = 'yes'
+                return HttpResponse(json.dumps(res))
+            else:
+                return HttpResponse(Error.msg_by_code(Error.ErrorAddingFriends))
+        else:
+            return HttpResponse(Error.msg_by_code(Error.InvalidSession))
+    except Exception, e:
+        import sys
+        return HttpResponse(Error.format_json(sys.exc_value, sys.exc_type, 'sys'))
+
+
+def update_group_status(request):
+    try:
+        if (session_check(request)):
+            g = request.GET
+            g_id = g.get("g_id", None)
+            status = g.get("status", None)
+            
+            if ((not g_id) or (not m_id) or (not status)):
+                return HttpResponse(Error.msg_by_code(Error.InvalidRequestTokens))
+            from locatorapp.models import Membership, Group, Person
+            group = Group.objects.filter(pk=g_id)
+            person = Person.objects.filter(pk=request.session('member_id'))
+            if Membership.objects.filter(group=group, member=person).exists():
+                mem = Membership.objects.get(group=group, member=person)
+                mem.status = status
+                mem.save()
+                res = {}
+                res["success"] = 'yes'
+                return HttpResponse(json.dumps(res))
+            else:
+                return HttpResponse(Error.msg_by_code(Error.MembershipInvalid))
+        else:
+            return HttpResponse(Error.msg_by_code(Error.InvalidSession))
+    except Exception, e:
+        import sys
+        return HttpResponse(Error.format_json(sys.exc_value, sys.exc_type, 'sys'))
+
+
+
+def update_group_map(request):
+    try:
+        if (session_check(request)):
+            g = request.GET
+            g_id = g.get("g_id", None)
+            g_map = g.get("g_map", '')
+            
+            if (not g_id):
+                return HttpResponse(Error.msg_by_code(Error.InvalidRequestTokens))
+            from locatorapp.models import Group, Person, Membership
+            group = Group.objects.filter(pk=g_id)
+            person = Person.objects.filter(pk=request.session('member_id'))
+            if Membership.objects.filter(group=group, member=person).exists():
+                group.map_data = g_map
+                group.save()
+                res = {}
+                res["success"] = 'yes'
+                return HttpResponse(json.dumps(res))
+            else:
+                return HttpResponse(Error.msg_by_code(Error.MembershipInvalid))
+        else:
+            return HttpResponse(Error.msg_by_code(Error.InvalidSession))
+    except Exception, e:
+        import sys
+        return HttpResponse(Error.format_json(sys.exc_value, sys.exc_type, 'sys'))
+
+
+def update_settings(request):
+    try:
+        if (session_check(request)):
+            g = request.GET
+            loc_freq = g.get("loc_freq", None)
+            loc_range = g.get("loc_range", None)
+            if ((not loc_freq) or (not loc_range)):
+                return HttpResponse(Error.msg_by_code(Error.InvalidRequestTokens))
+            from locatorapp.models import Person
+            p = Person.objects.get(pk=request.session["member_id"])
+            res = {}
+            p.loc_frequency = loc_freq 
+            p.loc_range = loc_range
+            p.save()
+
+            res = {}
+            res["success"] = 'yes'
+            return HttpResponse(json.dumps(res))
+        else:
+            return HttpResponse(Error.msg_by_code(Error.InvalidSession))
+    except Exception, e:
+        import sys
+        return HttpResponse(Error.format_json(sys.exc_value, sys.exc_type, 'sys'))
+
+
+
+
+def get_group_members(request):
+    try:
+        if (session_check(request)):
+            g = request.GET
+            g_id = g.get("g_id", None)
+            
+            if (not g_id):
+                return HttpResponse(Error.msg_by_code(Error.InvalidRequestTokens))
+            from locatorapp.models import Group,Person,Membership
+            group = Group.objects.filter(pk=g_id)
+            person = Person.objects.filter(pk=request.session('member_id'))
+            if Membership.objects.filter(group=group, member=person).exists():
+                res = {}
+                res["group_id"] = g_id
+                members = []
+                for member in group.members.all():
+                    m = {}
+                    m['id'] = member.id
+                    m['name'] = member.name
+                    members.append(m)
+                res["members"] = members
+                return HttpResponse(json.dumps(res))
+            else:
+                return HttpResponse(Error.msg_by_code(Error.MembershipInvalid))
+        else:
+            return HttpResponse(Error.msg_by_code(Error.InvalidSession))
+    except Exception, e:
+        import sys
+        return HttpResponse(Error.format_json(sys.exc_value, sys.exc_type, 'sys'))
+
+
+def get_member_groups(request):
+    try:
+        if (session_check(request)):
+            g = request.GET
+            g_status = g.get("g_status", None)
+            if (not g_status):
+                return HttpResponse(Error.msg_by_code(Error.InvalidRequestTokens))
+            from locatorapp.models import Group,Person, Membership
+            if Membership.objects.filter(group=group, member=person).exists():
+                res = {}
+                groups = []
+                for group in Group.objects.filter(members__id=request.session('member_id')):
+                    g = {}
+                    g['id'] = group.id
+                    g['name'] = group.name
+                    groups.append(g)
+                res["groups"] = groups
+                return HttpResponse(json.dumps(res))
+            else:
+                return HttpResponse(Error.msg_by_code(Error.MembershipInvalid))
+        else:
+            return HttpResponse(Error.msg_by_code(Error.InvalidSession))
+    except Exception, e:
+        import sys
+        return HttpResponse(Error.format_json(sys.exc_value, sys.exc_type, 'sys'))
+

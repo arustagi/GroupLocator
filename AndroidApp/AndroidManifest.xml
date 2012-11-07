@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.grouplocator" >
+    
+    <uses-permission android:name="android.permission.INTERNET"/>
+	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+	<uses-sdk android:minSdkVersion="10" />
+    
+	<application
+        android:icon="@drawable/icmages"
+        android:label="@string/app_name" 
+        android:theme="@android:style/Theme.Black.NoTitleBar"
+        
+        >
+        
+        <service android:name=".GLService" />
+        
+        <activity android:name=".Index" android:label="@string/app_name" android:configChanges = "orientation"
+                  android:screenOrientation = "portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+		</activity>
+		
+        <activity android:name=".Main"
+            android:configChanges = "orientation"
+                  android:screenOrientation = "portrait" 
+            />
+        <activity android:name=".GroupCreate" android:configChanges = "orientation"
+                  android:screenOrientation = "portrait"/>
+        <activity android:name=".Invitations" android:configChanges = "orientation"
+                  android:screenOrientation = "portrait"/>
+        <activity android:name=".Subscriptions" android:configChanges = "orientation"
+                  android:screenOrientation = "portrait"/>
+        <activity android:name=".GLMap" android:configChanges = "orientation"
+                  android:screenOrientation = "portrait"/>
+        <activity android:name=".FacebookFriendsList" android:configChanges = "orientation"
+                  android:screenOrientation = "portrait"/>
+        
+        <uses-library android:name="com.google.android.maps" />
+        
+    </application>
+    
+</manifest>

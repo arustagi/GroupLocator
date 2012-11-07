@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/lineItem"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:padding="6sp" >
+
+    <TextView
+        android:id="@+id/txt_cl_group_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:text="Group"
+        android:textColor="#ffffff"
+        android:layout_marginLeft="8dp"
+        android:textSize="22sp" />
+
+	<TextView
+	    android:id="@+id/txt_cl_group_invitor"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_alignLeft="@+id/txt_cl_group_name"
+	    android:layout_below="@+id/txt_cl_group_name"
+	    android:text="Invited By: "
+	    android:textColor="#ffffff"
+	    android:layout_marginLeft="11dp"
+	    android:textSize="12sp" />
+
+	<TextView
+	    android:id="@+id/txt_cl_group_message"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_alignLeft="@+id/txt_cl_group_invitor"
+	    android:layout_below="@+id/txt_cl_group_invitor"
+	    android:layout_marginTop="4dp"
+	    android:text="Group"
+	    android:textColor="#ffffff"
+	    android:textSize="12sp" />
+    
+</RelativeLayout>
